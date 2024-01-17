@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Chat App</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        #nameEntry, #chat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #nameEntry label, #nameEntry input, #nameEntry button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        #nameEntry input, #nameEntry button {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #nameEntry button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        #nameEntry button:disabled {
+            background-color: #ddd;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        #chat {
+            display: none;
+            width: 80%;
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        #messages {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            max-height: 50vh;
+            padding: 20px;
+        }
+
+        #form {
+            display: flex;
+            margin-top: 10px;
+        }
+
+        #m {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:disabled {
+            background-color: #ddd;
+            color: #666;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div id="nameEntry">
+        <label for="username">Enter your name:</label>
+        <input type="text" id="username" />
+        <button id="joinButton">Join Chat</button>
+    </div>
+
+    <div id="chat">
+        <ul id="messages"></ul>
+        <form id="form" action="">
+            <input id="m" autocomplete="off" placeholder="Type your message..." />
+            <button id="sendButton" disabled>Send</button>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        $(function () {
+            const socket = io();
+            let userName;
+
+            $('#joinButton').click(function () {
+                userName = $('#username').val().trim();
+                if (userName !== '') {
+                    $('#nameEntry').fadeOut();
+                    $('#chat').fadeIn();
+                    $('#username').prop('disabled', true);
+                    $(this).prop('disabled', true);
+
+                    $('form').submit(function(){
+                        const message = $('#m').val().trim();
+                        if (message !== '') {
+                            socket.emit('chat message', { name: userName, message });
+                            $('#m').val('');
+                        }
+                        return false;
+                    });
+
+                    socket.on('chat message', function(data){
+                        $('#messages').append($('<li>').text(`${data.name}: ${data.message}`));
+                    });
+                }
+            });
+
+            $('#m').on('input', function() {
+                const message = $(this).val().trim();
+                $('#sendButton').prop('disabled', message === '');
+            });
+        });
+    </script>
+</body>
+</html>
